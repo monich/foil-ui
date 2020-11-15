@@ -13,6 +13,7 @@ Item {
     property Component iconComponent
 
     readonly property var settings: foilUi.settings
+    readonly property int screenHeight: page.isLandscape ? Screen.width : Screen.height
     readonly property bool landscapeLayout: page.isLandscape && Screen.sizeCategory < Screen.Large
     readonly property bool unlocking: !foilUi.isLockedState(foilModel.foilState)
     readonly property bool canEnterPassword: inputField.text.length > 0 && !unlocking &&
