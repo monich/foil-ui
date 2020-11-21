@@ -32,20 +32,18 @@ Item {
 
         MenuItem {
             text: foilUi.qsTrEnterPasswordViewMenuGenerateNewKey()
-            onClicked: {
-                var warning = pageStack.push(Qt.resolvedUrl("FoilUiGenerateKeyWarning.qml"), {
-                    allowedOrientations: page.allowedOrientations,
-                    foilUi: view.foilUi
-                })
-                warning.acceptDestinationProperties = {
+            onClicked: pageStack.push(Qt.resolvedUrl("FoilUiGenerateKeyWarning.qml"), {
+                foilUi: view.foilUi,
+                allowedOrientations: page.allowedOrientations,
+                acceptDestinationProperties: {
                     allowedOrientations: page.allowedOrientations,
                     mainPage: page,
                     foilUi: view.foilUi,
                     foilModel: foilModel
-                }
-                warning.acceptDestinationAction = PageStackAction.Replace
-                warning.acceptDestination = Qt.resolvedUrl("FoilUiGenerateKeyPage.qml")
-            }
+                },
+                acceptDestinationAction: PageStackAction.Replace,
+                acceptDestination: Qt.resolvedUrl("FoilUiGenerateKeyPage.qml")
+            })
         }
     }
 
