@@ -36,27 +36,15 @@ Item {
                 var warning = pageStack.push(Qt.resolvedUrl("FoilUiGenerateKeyWarning.qml"), {
                     allowedOrientations: page.allowedOrientations,
                     foilUi: view.foilUi
-                });
-                warning.accepted.connect(function() {
-                    // Replace the warning page with a slide. This may
-                    // occasionally generate "Warning: cannot pop while
-                    // transition is in progress" if the user taps the
-                    // page stack indicator (as opposed to the Accept
-                    // button) but this warning is fairly harmless:
-                    //
-                    // _dialogDone (Dialog.qml:124)
-                    // on_NavigationChanged (Dialog.qml:177)
-                    // navigateForward (PageStack.qml:291)
-                    // onClicked (private/PageStackIndicator.qml:174)
-                    //
-                    warning.canNavigateForward = false
-                    pageStack.replace(Qt.resolvedUrl("FoilUiGenerateKeyPage.qml"), {
-                        allowedOrientations: page.allowedOrientations,
-                        mainPage: page,
-                        foilUi: view.foilUi,
-                        foilModel: foilModel
-                    })
                 })
+                warning.acceptDestinationProperties = {
+                    allowedOrientations: page.allowedOrientations,
+                    mainPage: page,
+                    foilUi: view.foilUi,
+                    foilModel: foilModel
+                }
+                warning.acceptDestinationAction = PageStackAction.Replace
+                warning.acceptDestination = Qt.resolvedUrl("FoilUiGenerateKeyPage.qml")
             }
         }
     }
