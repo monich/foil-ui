@@ -4,25 +4,33 @@ import Sailfish.Silica 1.0
 Dialog {
     property var foilUi
 
+    DialogHeader {
+        id: header
+
+        spacing: 0
+    }
+
     SilicaFlickable {
-        anchors.fill: parent
-        contentHeight: column.height
+        // Same space above and below the content
+        contentHeight: column.height + 2 * column.y
+        clip: true
+        anchors {
+            top: header.bottom
+            bottom: parent.bottom
+            left: parent.left
+            right: parent.right
+        }
 
         Column {
             id: column
 
+            y: spacing
             width: parent.width
-
-            DialogHeader { }
+            spacing: Theme.paddingLarge
 
             InfoLabel {
                 text: foilUi.qsTrGenerateKeyWarningTitle()
                 font.bold: true
-            }
-
-            Item {
-                width: 1
-                height: Theme.paddingLarge
             }
 
             Label {
@@ -32,11 +40,8 @@ Dialog {
                 wrapMode: Text.Wrap
                 color: Theme.highlightColor
             }
-
-            Item {
-                width: 1
-                height: Theme.paddingLarge
-            }
         }
+
+        VerticalScrollDecorator { }
     }
 }
