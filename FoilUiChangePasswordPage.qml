@@ -6,7 +6,7 @@ import "../harbour"
 Page {
     id: page
 
-    allowedOrientations: window.allowedOrientations
+    allowedOrientations: Orientation.All
 
     property Page mainPage
     property var foilUi
@@ -36,12 +36,17 @@ Page {
     function changePassword() {
         if (canChangePassword) {
             if (foilModel.checkPassword(currentPassword)) {
-                pageStack.push(Qt.resolvedUrl("FoilUiConfirmPasswordDialog.qml"), {
+                var dialog = pageStack.push(Qt.resolvedUrl("FoilUiConfirmPasswordDialog.qml"), {
+                    allowedOrientations: page.allowedOrientations,
                     foilUi: page.foilUi,
                     password: newPassword
-                }).passwordConfirmed.connect(function() {
+                })
+                dialog.passwordConfirmed.connect(function() {
                     if (foilModel.changePassword(currentPassword, newPassword)) {
-                        pageStack.pop(mainPage)
+                        dialog.forwardNavigation = true
+                        dialog.acceptDestinationAction = PageStackAction.Pop
+                        dialog.acceptDestination = mainPage
+                        dialog.accept()
                     } else {
                         invalidPassword()
                     }
