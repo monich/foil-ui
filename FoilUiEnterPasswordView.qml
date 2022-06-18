@@ -30,6 +30,8 @@ Item {
     PullDownMenu {
         id: pullDownMenu
 
+        visible: !Qt.inputMethod.visible
+
         MenuItem {
             text: foilUi.qsTrEnterPasswordViewMenuGenerateNewKey()
             onClicked: pageStack.push(Qt.resolvedUrl("FoilUiGenerateKeyWarning.qml"), {
@@ -55,19 +57,15 @@ Item {
 
         // Hide it when it's only partially visible (i.e. in langscape)
         // or getting too close to the edge of the screen
-        opacity: (y < Theme.paddingMedium) ? 0 : 1
-        Behavior on opacity {
-            enabled: !page.orientationTransitionRunning
-            FadeAnimation { duration: 100 }
-        }
+        opacity: (y < Theme.paddingLarge) ? 0 : 1
     }
 
     Item {
         id: panel
 
         width: parent.width
-        height: childrenRect.height
-        y: (parent.height > height) ? Math.floor((parent.height - height)/2) : (parent.height - height)
+        height: childrenRect.height + (landscapeLayout ? 0 : Theme.paddingLarge)
+        y: Math.min(Math.floor((screenHeight - height)/2), parent.height - height)
 
         readonly property bool showLongPrompt: y >= Theme.paddingMedium
 
@@ -159,7 +157,7 @@ Item {
                 PropertyChanges {
                     target: button
                     anchors {
-                        topMargin: Theme.paddingLarge
+                        topMargin: 0
                         rightMargin: 0
                     }
                 }
