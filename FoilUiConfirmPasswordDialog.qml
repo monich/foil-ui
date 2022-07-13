@@ -13,8 +13,7 @@ Dialog {
     property bool wrongPassword
 
     readonly property bool landscapeLayout: isLandscape && Screen.sizeCategory < Screen.Large
-    readonly property bool canCheckPassword: inputField.text.length > 0 &&
-                                             inputField.text.length > 0 && !wrongPassword
+    readonly property bool canCheckPassword: inputField.text.length > 0 && !wrongPassword
 
     signal passwordConfirmed()
 
