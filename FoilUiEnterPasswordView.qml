@@ -55,7 +55,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         y: (panel.y > height) ? Math.floor((panel.y - height)/2) : (panel.y - height)
 
-        // Hide it when it's only partially visible (i.e. in langscape)
+        // Hide it when it's only partially visible (i.e. in landscape)
         // or getting too close to the edge of the screen
         opacity: (y < Theme.paddingLarge) ? 0 : 1
     }
