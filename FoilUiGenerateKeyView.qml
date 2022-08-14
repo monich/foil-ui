@@ -15,6 +15,7 @@ Item {
     readonly property bool canGenerate: inputField.text.length >= minPassphraseLen && !generating
     readonly property bool generating: foilUi.isGeneratingKeyState(foilModel.foilState)
     readonly property bool landscapeLayout: page.isLandscape && Screen.sizeCategory < Screen.Large
+    readonly property int fullHeight: page.isPortrait ? Screen.height : Screen.width
 
     function generateKey() {
         if (canGenerate) {
@@ -35,22 +36,22 @@ Item {
     HarbourHighlightIcon {
         source: "images/key.svg"
         width: Theme.itemSizeHuge
-        sourceSize.width: width
+        sourceSize.width: Theme.itemSizeHuge
         anchors.horizontalCenter: parent.horizontalCenter
-        property real attachToY: panel.y + keySize.y
+        property real attachToY: panel.y + (promptLabel.visible ? promptLabel.y : keySize.y)
         y: (attachToY > height) ? Math.floor((attachToY - height)/2) : (attachToY - height)
         visible: opacity > 0
         // Hide it when it's getting too close to the top if the view
-        // Otherwise show it when the prompt is hidden
-        opacity: (y < Theme.paddingLarge) ? 0 : (1 - promptLabel.opacity)
+        opacity: (y < Theme.paddingLarge) ? 0 : 1
+        Behavior on opacity { FadeAnimation { } }
     }
 
     Item {
         id: panel
 
         width: parent.width
-        height: childrenRect.height
-        y: (parent.height > height) ? Math.floor((parent.height - height)/2) : (parent.height - height)
+        height: childrenRect.height + (landscapeLayout ? 0 : Theme.paddingLarge)
+        y: Math.min((fullHeight - height)/2, parent.height - panel.height)
 
         InfoLabel {
             id: promptLabel
@@ -98,22 +99,12 @@ Item {
         Button {
             id: button
 
-            anchors.topMargin: Theme.paddingLarge
+            anchors.bottomMargin: Theme.paddingLarge
             text: generating ?
                 foilUi.qsTrGenerateKeyButtonGenerating() :
                 foilUi.qsTrGenerateKeyButtonGenerate()
             enabled: canGenerate
             onClicked: generateKey()
-        }
-
-        // Theme.paddingLarge pixels below the button in portrait
-        Item {
-            height: landscapeLayout ? 0 : Theme.paddingLarge
-            anchors {
-                top: button.bottom
-                left: button.left
-                right: button.right
-            }
         }
     }
 
@@ -134,7 +125,9 @@ Item {
                     target: button
                     anchors {
                         top: inputField.bottom
+                        right: undefined
                         horizontalCenter: parent.horizontalCenter
+                        bottom: undefined
                     }
                 },
                 PropertyChanges {
@@ -158,9 +151,10 @@ Item {
                 AnchorChanges {
                     target: button
                     anchors {
-                        top: keySize.bottom
+                        top: undefined
                         right: panel.right
                         horizontalCenter: undefined
+                        bottom: inputField.bottom
                     }
                 },
                 PropertyChanges {

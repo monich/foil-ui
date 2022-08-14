@@ -10,6 +10,9 @@ Page {
 
     allowedOrientations: Orientation.All
 
+    // Otherwise width is changing with a delay, causing visible layout changes
+    onIsLandscapeChanged: width = isLandscape ? Screen.height : Screen.width
+
     Connections {
         target: foilModel
         onFoilStateChanged: {

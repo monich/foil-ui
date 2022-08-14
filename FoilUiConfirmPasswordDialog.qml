@@ -14,6 +14,7 @@ Dialog {
 
     readonly property bool landscapeLayout: isLandscape && Screen.sizeCategory < Screen.Large
     readonly property bool canCheckPassword: inputField.text.length > 0 && !wrongPassword
+    readonly property int fullHeight: page.isPortrait ? Screen.height : Screen.width
 
     signal passwordConfirmed()
 
@@ -59,8 +60,8 @@ Dialog {
         id: panel
 
         width: parent.width
-        height: childrenRect.height
-        y: (parent.height > height) ? Math.floor((parent.height - height)/2) : (parent.height - height)
+        height: childrenRect.height + (landscapeLayout ? 0 : Theme.paddingLarge)
+        y: Math.min((fullHeight - height)/2, parent.height - panel.height)
 
         Label {
             id: warning
@@ -92,10 +93,7 @@ Dialog {
         Button {
             id: button
 
-            anchors {
-                topMargin: Theme.paddingLarge
-                bottomMargin: 2 * Theme.paddingSmall
-            }
+            anchors.bottomMargin: Theme.paddingLarge
             text: foilUi.qsTrConfirmPasswordButton()
             enabled: dialog.canCheckPassword
             onClicked: dialog.checkPassword()
@@ -119,10 +117,7 @@ Dialog {
                 },
                 PropertyChanges {
                     target: inputField
-                    anchors {
-                        rightMargin: 0
-                        bottomMargin: Theme.paddingLarge
-                    }
+                    anchors.rightMargin: 0
                 },
                 AnchorChanges {
                     target: button
@@ -149,10 +144,7 @@ Dialog {
                 },
                 PropertyChanges {
                     target: inputField
-                    anchors {
-                        rightMargin: Theme.horizontalPageMargin
-                        bottomMargin: Theme.paddingSmall
-                    }
+                    anchors.rightMargin: Theme.horizontalPageMargin
                 },
                 AnchorChanges {
                     target: button
