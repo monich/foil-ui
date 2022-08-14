@@ -14,7 +14,7 @@ Dialog {
 
     readonly property bool landscapeLayout: isLandscape && Screen.sizeCategory < Screen.Large
     readonly property bool canCheckPassword: inputField.text.length > 0 && !wrongPassword
-    readonly property int fullHeight: page.isPortrait ? Screen.height : Screen.width
+    readonly property int fullHeight: dialog.isPortrait ? Screen.height : Screen.width
 
     signal passwordConfirmed()
 
