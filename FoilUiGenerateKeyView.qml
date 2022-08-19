@@ -4,23 +4,23 @@ import Sailfish.Silica 1.0
 import "../harbour"
 
 Item {
-    id: view
+    id: thisView
 
     property var foilUi
     property var foilModel
     property Page page
     property alias prompt: promptLabel.text
 
-    readonly property int minPassphraseLen: 8
-    readonly property bool canGenerate: inputField.text.length >= minPassphraseLen && !generating
-    readonly property bool generating: foilUi.isGeneratingKeyState(foilModel.foilState)
-    readonly property bool landscapeLayout: page.isLandscape && Screen.sizeCategory < Screen.Large
-    readonly property int fullHeight: page.isPortrait ? Screen.height : Screen.width
+    readonly property int _minPassphraseLen: 8
+    readonly property bool _canGenerate: inputField.text.length >= _minPassphraseLen && !_generating
+    readonly property bool _generating: foilUi.isGeneratingKeyState(foilModel.foilState)
+    readonly property bool _landscapeLayout: page.isLandscape && Screen.sizeCategory < Screen.Large
+    readonly property int _fullHeight: page.isPortrait ? Screen.height : Screen.width
 
     function generateKey() {
-        if (canGenerate) {
+        if (_canGenerate) {
             var dialog = pageStack.push(Qt.resolvedUrl("FoilUiConfirmPasswordDialog.qml"), {
-                foilUi: view.foilUi,
+                foilUi: thisView.foilUi,
                 allowedOrientations: page.allowedOrientations,
                 password: inputField.text
             })
@@ -50,8 +50,8 @@ Item {
         id: panel
 
         width: parent.width
-        height: childrenRect.height + (landscapeLayout ? 0 : Theme.paddingLarge)
-        y: Math.min((fullHeight - height)/2, parent.height - panel.height)
+        height: childrenRect.height + (_landscapeLayout ? 0 : Theme.paddingLarge)
+        y: Math.min((_fullHeight - height)/2, parent.height - panel.height)
 
         InfoLabel {
             id: promptLabel
@@ -66,8 +66,8 @@ Item {
             id: keySize
 
             label: foilUi.qsTrGenerateKeySizeLabel()
-            enabled: !generating
-            width: parent.width
+            enabled: !_generating
+            width: inputField.width
             anchors {
                 top: promptLabel.bottom
                 topMargin: Theme.paddingLarge
@@ -88,11 +88,11 @@ Item {
                 top: keySize.bottom
                 topMargin: Theme.paddingLarge
             }
-            label: text.length < minPassphraseLen ?
-                foilUi.qsTrGenerateKeyPasswordDescription(minPassphraseLen) :
+            label: text.length < _minPassphraseLen ?
+                foilUi.qsTrGenerateKeyPasswordDescription(_minPassphraseLen) :
                 placeholderText
-            enabled: !generating
-            EnterKey.enabled: canGenerate
+            enabled: !_generating
+            EnterKey.enabled: _canGenerate
             EnterKey.onClicked: generateKey()
         }
 
@@ -100,10 +100,10 @@ Item {
             id: button
 
             anchors.bottomMargin: Theme.paddingLarge
-            text: generating ?
+            text: _generating ?
                 foilUi.qsTrGenerateKeyButtonGenerating() :
                 foilUi.qsTrGenerateKeyButtonGenerate()
-            enabled: canGenerate
+            enabled: _canGenerate
             onClicked: generateKey()
         }
     }
@@ -111,7 +111,7 @@ Item {
     states: [
         State {
             name: "portrait"
-            when: !landscapeLayout
+            when: !_landscapeLayout
             changes: [
                 AnchorChanges {
                     target: inputField
@@ -138,7 +138,7 @@ Item {
         },
         State {
             name: "landscape"
-            when: landscapeLayout
+            when: _landscapeLayout
             changes: [
                 AnchorChanges {
                     target: inputField
