@@ -74,8 +74,8 @@ Item {
             }
             menu: ContextMenu {
                 MenuItem { text: "1024" }
-                MenuItem { text: "1500" }
                 MenuItem { text: "2048" }
+                MenuItem { text: "4096" }
             }
             Component.onCompleted: currentIndex = 2 // default
         }
