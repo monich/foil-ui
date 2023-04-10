@@ -12,19 +12,23 @@ Item {
     property bool wrongPassword
     property Component iconComponent
 
-    readonly property var settings: foilUi.settings
-    readonly property int screenHeight: page.isLandscape ? Screen.width : Screen.height
-    readonly property bool landscapeLayout: page.isLandscape && Screen.sizeCategory < Screen.Large
-    readonly property bool unlocking: !foilUi.isLockedState(foilModel.foilState)
-    readonly property bool canEnterPassword: inputField.text.length > 0 && !unlocking &&
+    readonly property var _settings: foilUi.settings
+    readonly property int _screenHeight: page.isLandscape ? Screen.width : Screen.height
+    readonly property bool _landscapeLayout: page.isLandscape && Screen.sizeCategory < Screen.Large
+    readonly property bool _unlocking: !foilUi.isLockedState(foilModel.foilState)
+    readonly property bool _canEnterPassword: inputField.text.length > 0 && !_unlocking &&
                                     !wrongPasswordAnimation.running && !wrongPassword
 
     function enterPassword() {
         if (!foilModel.unlock(inputField.text)) {
             wrongPassword = true
             wrongPasswordAnimation.start()
-            inputField.requestFocus()
+            requestFocus()
         }
+    }
+
+    function requestFocus() {
+        inputField.requestFocus()
     }
 
     PullDownMenu {
@@ -64,8 +68,8 @@ Item {
         id: panel
 
         width: parent.width
-        height: childrenRect.height + (landscapeLayout ? 0 : Theme.paddingLarge)
-        y: Math.min(Math.floor((screenHeight - height)/2), parent.height - height)
+        height: childrenRect.height + (_landscapeLayout ? 0 : Theme.paddingLarge)
+        y: Math.min(Math.floor((_screenHeight - height)/2), parent.height - height)
 
         readonly property bool showLongPrompt: y >= Theme.paddingMedium
 
@@ -90,19 +94,19 @@ Item {
                 top: longPrompt.bottom
                 topMargin: Theme.paddingLarge
             }
-            enabled: !unlocking
+            enabled: !_unlocking
             onTextChanged: view.wrongPassword = false
             EnterKey.onClicked: view.enterPassword()
-            EnterKey.enabled: view.canEnterPassword
+            EnterKey.enabled: view._canEnterPassword
         }
 
         Button {
             id: button
 
-            text: unlocking ?
+            text: _unlocking ?
                 foilUi.qsTrEnterPasswordViewButtonUnlocking() :
                 foilUi.qsTrEnterPasswordViewButtonUnlock()
-            enabled: view.canEnterPassword
+            enabled: view._canEnterPassword
             onClicked: view.enterPassword()
         }
     }
@@ -116,19 +120,19 @@ Item {
     Loader {
         anchors {
             top: parent.top
-            topMargin: screenHeight - height - Theme.paddingLarge
+            topMargin: _screenHeight - height - Theme.paddingLarge
             left: parent.left
             leftMargin: Theme.horizontalPageMargin
             right: parent.right
             rightMargin: Theme.horizontalPageMargin
         }
-        readonly property bool display: settings.sharedKeyWarning && foilUi.otherFoilAppsInstalled
+        readonly property bool display: _settings.sharedKeyWarning && foilUi.otherFoilAppsInstalled
         opacity: display ? 1 : 0
         active: opacity > 0
         sourceComponent: Component {
             FoilUiAppsWarning {
                 foilUi: view.foilUi
-                onClicked: settings.sharedKeyWarning = false
+                onClicked: _settings.sharedKeyWarning = false
             }
         }
         Behavior on opacity { FadeAnimation {} }
@@ -137,7 +141,7 @@ Item {
     states: [
         State {
             name: "portrait"
-            when: !landscapeLayout
+            when: !_landscapeLayout
             changes: [
                 AnchorChanges {
                     target: inputField
@@ -165,7 +169,7 @@ Item {
         },
         State {
             name: "landscape"
-            when: landscapeLayout
+            when: _landscapeLayout
             changes: [
                 AnchorChanges {
                     target: inputField
