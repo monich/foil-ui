@@ -12,6 +12,7 @@ Item {
     property bool wrongPassword
     property Component iconComponent
 
+    property bool _completed
     readonly property var _settings: foilUi.settings
     readonly property int _screenHeight: page.isLandscape ? Screen.width : Screen.height
     readonly property bool _landscapeLayout: page.isLandscape && Screen.sizeCategory < Screen.Large
@@ -31,10 +32,31 @@ Item {
         inputField.requestFocus()
     }
 
+    Component.onCompleted: _completed = true
+
+    Timer {
+        id: pullDownMenuVisibleTimer
+
+        interval: 400
+        onTriggered: pullDownMenu.visible = true
+    }
+
     PullDownMenu {
         id: pullDownMenu
 
-        visible: !Qt.inputMethod.visible
+        visible: false
+
+        readonly property bool shouldBeVisible: _completed && !Qt.inputMethod.visible
+
+        // Hide immediately, show with a delay
+        onShouldBeVisibleChanged: {
+            if (shouldBeVisible) {
+                pullDownMenuVisibleTimer.restart()
+            } else {
+                pullDownMenuVisibleTimer.stop()
+                visible = false
+            }
+        }
 
         MenuItem {
             text: foilUi.qsTrEnterPasswordViewMenuGenerateNewKey()
