@@ -21,10 +21,10 @@ Page {
     property alias newPasswordLabel: newPasswordField.label
     property alias buttonText: changePasswordButton.text
 
-    readonly property var settings: foilUi.settings
-    readonly property bool landscapeLayout: isLandscape && Screen.sizeCategory < Screen.Large
-    readonly property real screenHeight: isPortrait ? Screen.height : Screen.width
-    readonly property bool canChangePassword: currentPassword.length > 0 && newPassword.length > 0 &&
+    readonly property var _settings: foilUi.settings
+    readonly property bool _landscapeLayout: isLandscape && Screen.sizeCategory < Screen.Large
+    readonly property real _fullHeight: isPortrait ? Screen.height : Screen.width
+    readonly property bool _canChangePassword: currentPassword.length > 0 && newPassword.length > 0 &&
                             currentPassword !== newPassword && !wrongPassword
 
     function invalidPassword() {
@@ -34,7 +34,7 @@ Page {
     }
 
     function changePassword() {
-        if (canChangePassword) {
+        if (_canChangePassword) {
             if (foilModel.checkPassword(currentPassword)) {
                 var dialog = pageStack.push(Qt.resolvedUrl("FoilUiConfirmPasswordDialog.qml"), {
                     allowedOrientations: page.allowedOrientations,
@@ -63,17 +63,9 @@ Page {
         }
     }
 
-    onIsLandscapeChanged: {
-        // In the older versions of Silica, the width was changing with a
-        // delay, causing visible and unpleasant layout changes. When support
-        // for cutout was introduced, this hack started to break the landscape
-        // layout (with cutout enabled, the width of the page in landscape is
-        // smaller than the screen height) and at the same time, the unpleasant
-        // rotation effects seems to have gone away.
-        if (!('hasCutouts' in Screen)) {
-            width = isLandscape ? Screen.height : Screen.width
-        }
-    }
+    // Otherwise width is changing with a delay, causing visible layout changes
+    // when on-screen keyboard is active and taking part of the screen.
+    onIsLandscapeChanged: width = isLandscape ? _landscapeWidth : Screen.width
 
     InfoLabel {
         id: prompt
@@ -120,7 +112,7 @@ Page {
                 top: currentPasswordField.bottom
             }
 
-            EnterKey.enabled: page.canChangePassword
+            EnterKey.enabled: page._canChangePassword
             EnterKey.onClicked: page.changePassword()
         }
 
@@ -132,7 +124,7 @@ Page {
                 bottomMargin: 2 * Theme.paddingSmall
             }
 
-            enabled: page.canChangePassword
+            enabled: page._canChangePassword
             onClicked: page.changePassword()
         }
     }
@@ -146,19 +138,19 @@ Page {
     Loader {
         anchors {
             top: parent.top
-            topMargin: screenHeight - height - Theme.paddingLarge
+            topMargin: _fullHeight - height - Theme.paddingLarge
             left: parent.left
             leftMargin: Theme.horizontalPageMargin
             right: parent.right
             rightMargin: Theme.horizontalPageMargin
         }
-        readonly property bool display: settings.sharedKeyWarning2 && foilUi.otherFoilAppsInstalled
+        readonly property bool display: _settings.sharedKeyWarning2 && foilUi.otherFoilAppsInstalled
         opacity: display ? 1 : 0
         active: opacity > 0
         sourceComponent: Component {
             FoilUiAppsWarning {
                 foilUi: page.foilUi
-                onClicked: settings.sharedKeyWarning2 = false
+                onClicked: _settings.sharedKeyWarning2 = false
             }
         }
         Behavior on opacity { FadeAnimation {} }
@@ -167,7 +159,7 @@ Page {
     states: [
         State {
             name: "portrait"
-            when: !landscapeLayout
+            when: !_landscapeLayout
             changes: [
                 AnchorChanges {
                     target: currentPasswordField
@@ -197,7 +189,7 @@ Page {
         },
         State {
             name: "landscape"
-            when: landscapeLayout
+            when: _landscapeLayout
             changes: [
                 AnchorChanges {
                     target: currentPasswordField

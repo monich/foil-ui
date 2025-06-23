@@ -4,23 +4,17 @@ import Sailfish.Silica 1.0
 Page {
     id: thisPage
 
+    allowedOrientations: Orientation.All
+
     property var foilModel
     property var foilUi
     property Page mainPage
 
-    allowedOrientations: Orientation.All
+    readonly property real _landscapeWidth: Screen.height - (('topCutout' in Screen) ? Screen.topCutout.height : 0)
 
-    onIsLandscapeChanged: {
-        // In the older versions of Silica, the width was changing with a
-        // delay, causing visible and unpleasant layout changes. When support
-        // for cutout was introduced, this hack started to break the landscape
-        // layout (with cutout enabled, the width of the page in landscape is
-        // smaller than the screen height) and at the same time, the unpleasant
-        // rotation effects seems to have gone away.
-        if (!('hasCutouts' in Screen)) {
-            width = isLandscape ? Screen.height : Screen.width
-        }
-    }
+    // Otherwise width is changing with a delay, causing visible layout changes
+    // when on-screen keyboard is active and taking part of the screen.
+    onIsLandscapeChanged: width = isLandscape ? _landscapeWidth : Screen.width
 
     Connections {
         target: foilModel
