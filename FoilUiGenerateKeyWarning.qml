@@ -4,11 +4,7 @@ import Sailfish.Silica 1.0
 Dialog {
     property var foilUi
 
-    DialogHeader {
-        id: header
-
-        spacing: 0
-    }
+    DialogHeader { id: header }
 
     SilicaFlickable {
         // Same space above and below the content
@@ -28,9 +24,29 @@ Dialog {
             width: parent.width
             spacing: Theme.paddingLarge
 
-            InfoLabel {
-                text: foilUi.qsTrGenerateKeyWarningTitle()
-                font.bold: true
+            Row {
+                // Center the title
+                x: Math.max(Math.floor((parent.width - title.width)/2 - title.x), 0)
+                spacing: Theme.paddingLarge
+
+                Image {
+                    source: "images/warning.svg"
+                    sourceSize.height: title.font.pixelSize
+                    anchors.bottom: title.baseline
+                }
+
+                Label {
+                    id: title
+
+                    text: foilUi.qsTrGenerateKeyWarningTitle()
+                    color: Theme.secondaryHighlightColor
+                    font {
+                        pixelSize: Theme.fontSizeExtraLarge
+                        family: Theme.fontFamilyHeading
+                        capitalization: Font.AllUppercase
+                        bold: true
+                    }
+                }
             }
 
             Label {
