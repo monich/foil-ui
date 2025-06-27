@@ -4,25 +4,25 @@ import Sailfish.Silica 1.0
 import "../harbour"
 
 Item {
-    id: view
+    id: thisView
 
-    property var foilModel
     property var foilUi
+    property var foilModel
     property Page page
-    property bool wrongPassword
     property Component iconComponent
 
     property bool _completed
+    property bool _wrongPassword
     readonly property var _settings: foilUi.settings
     readonly property int _screenHeight: page.isLandscape ? Screen.width : Screen.height
     readonly property bool _landscapeLayout: page.isLandscape && Screen.sizeCategory < Screen.Large
     readonly property bool _unlocking: !foilUi.isLockedState(foilModel.foilState)
     readonly property bool _canEnterPassword: inputField.text.length > 0 && !_unlocking &&
-                                    !wrongPasswordAnimation.running && !wrongPassword
+                                    !wrongPasswordAnimation.running && !_wrongPassword
 
     function enterPassword() {
         if (!foilModel.unlock(inputField.text)) {
-            wrongPassword = true
+            _wrongPassword = true
             wrongPasswordAnimation.start()
             requestFocus()
         }
@@ -61,12 +61,12 @@ Item {
         MenuItem {
             text: foilUi.qsTrEnterPasswordViewMenuGenerateNewKey()
             onClicked: pageStack.push(Qt.resolvedUrl("FoilUiGenerateKeyWarning.qml"), {
-                foilUi: view.foilUi,
+                foilUi: thisView.foilUi,
                 allowedOrientations: page.allowedOrientations,
                 acceptDestinationProperties: {
                     allowedOrientations: page.allowedOrientations,
                     mainPage: page,
-                    foilUi: view.foilUi,
+                    foilUi: thisView.foilUi,
                     foilModel: foilModel
                 },
                 acceptDestinationAction: PageStackAction.Replace,
@@ -75,68 +75,77 @@ Item {
         }
     }
 
-    Loader {
-        sourceComponent: iconComponent
-        visible: opacity > 0 && !page.orientationTransitionRunning
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: (panel.y > height) ? Math.floor((panel.y - height)/2) : (panel.y - height)
-
-        // Hide it when it's only partially visible (i.e. in landscape)
-        // or getting too close to the edge of the screen
-        opacity: (y < Theme.paddingLarge) ? 0 : 1
-    }
-
     Item {
-        id: panel
+        id: iconContainer
 
-        width: parent.width
-        height: childrenRect.height + (_landscapeLayout ? 0 : Theme.paddingLarge)
-        y: Math.min(Math.floor((_screenHeight - height)/2), parent.height - height)
+        readonly property int _margins: Theme.horizontalPageMargin
 
-        readonly property bool showLongPrompt: y >= Theme.paddingMedium
-
-        InfoLabel {
-            id: longPrompt
-
-            visible: panel.showLongPrompt
-            text: foilUi.qsTrEnterPasswordViewEnterPasswordLong()
+        anchors {
+            top: parent.top
+            left: parent.left
+            leftMargin: _landscapeLayout ? _margins : 0
         }
 
-        InfoLabel {
-            anchors.bottom: longPrompt.bottom
-            visible: !panel.showLongPrompt
-            text: foilUi.qsTrEnterPasswordViewEnterPasswordShort()
+        Loader {
+            id: iconLoader
+
+            opacity: ((iconContainer.x + x) > Theme.paddingLarge && (iconContainer.y + y) > Theme.paddingLarge) ? 1 : 0
+            visible: opacity > 0
+            sourceComponent: iconComponent
+            anchors.centerIn: iconContainer
+        }
+    }
+
+    Column {
+        id: inputContainer
+
+        readonly property int _ymin: Theme.paddingLarge
+        readonly property int _ymax1: _screenHeight/2 - inputField._backgroundRuleTopOffset - inputField.y
+        readonly property int _ymax2: thisView.height - inputField.height - inputField.y
+
+        y: Math.min(_ymax1, _ymax2)
+        width: parent.width - x - Theme.horizontalPageMargin
+
+        FoilUiInfoLabel {
+            id: loginLabel
+
+            shortText: foilUi.qsTrEnterPasswordViewEnterPasswordShort()
+            longText: foilUi.qsTrEnterPasswordViewEnterPasswordLong()
+            opacity: inputContainer.y >= inputContainer._ymin ? 1 : 0
+            height: maximumHeight
+            horizontalAlignment: Text.AlignLeft
+            verticalAlignment: Text.AlignVCenter
         }
 
         HarbourPasswordInputField {
             id: inputField
 
-            anchors {
-                left: panel.left
-                top: longPrompt.bottom
-                topMargin: Theme.paddingLarge
-            }
+            readonly property int _backgroundRuleTopOffset: contentItem.y + contentItem.height
+            readonly property int _backgroundRuleY: parent.parent.y + parent.y + y + _backgroundRuleTopOffset
+
             enabled: !_unlocking
-            onTextChanged: view.wrongPassword = false
-            EnterKey.onClicked: view.enterPassword()
-            EnterKey.enabled: view._canEnterPassword
+            onTextChanged: _wrongPassword = false
+            EnterKey.onClicked: enterPassword()
+            EnterKey.enabled: _canEnterPassword
         }
 
         Button {
-            id: button
+            id: unlockButton
 
+            anchors.rightMargin: Theme.horizontalPageMargin
+            opacity: (inputContainer.y + inputContainer.height + Theme.paddingLarge < thisView.height) ? 1 : 0
             text: _unlocking ?
                 foilUi.qsTrEnterPasswordViewButtonUnlocking() :
                 foilUi.qsTrEnterPasswordViewButtonUnlock()
-            enabled: view._canEnterPassword
-            onClicked: view.enterPassword()
+            enabled: _canEnterPassword && opacity > 0
+            onClicked: enterPassword()
         }
     }
 
     HarbourShakeAnimation  {
         id: wrongPasswordAnimation
 
-        target: panel
+        target: thisView
     }
 
     Loader {
@@ -153,7 +162,7 @@ Item {
         active: opacity > 0
         sourceComponent: Component {
             FoilUiAppsWarning {
-                foilUi: view.foilUi
+                foilUi: thisView.foilUi
                 onClicked: _settings.sharedKeyWarning = false
             }
         }
@@ -166,26 +175,26 @@ Item {
             when: !_landscapeLayout
             changes: [
                 AnchorChanges {
-                    target: inputField
-                    anchors.right: panel.right
-                },
-                PropertyChanges {
-                    target: inputField
-                    anchors.rightMargin: 0
+                    target: iconContainer
+                    anchors {
+                        right: parent.right
+                        bottom: inputContainer.top
+                    }
                 },
                 AnchorChanges {
-                    target: button
+                    target: unlockButton
                     anchors {
-                        top: inputField.bottom
+                        right: undefined
                         horizontalCenter: parent.horizontalCenter
                     }
                 },
                 PropertyChanges {
-                    target: button
-                    anchors {
-                        topMargin: 0
-                        rightMargin: 0
-                    }
+                    target: inputContainer
+                    x: Theme.horizontalPageMargin
+                },
+                PropertyChanges {
+                    target: loginLabel
+                    maximumHeight: Math.max(Math.min(thisView.height, _screenHeight/2) - iconLoader.height - 2 * iconContainer._margins - inputContainer._ymin - inputField._backgroundRuleTopOffset, Theme.itemSizeMedium)
                 }
             ]
         },
@@ -194,27 +203,27 @@ Item {
             when: _landscapeLayout
             changes: [
                 AnchorChanges {
-                    target: inputField
-                    anchors.right: button.left
-                },
-                PropertyChanges {
-                    target: inputField
-                    anchors.rightMargin: Theme.horizontalPageMargin
+                    target: iconContainer
+                    anchors {
+                        right: inputContainer.left
+                        bottom: parent.bottom
+                    }
                 },
                 AnchorChanges {
-                    target: button
+                    target: unlockButton
                     anchors {
-                        top: longPrompt.bottom
-                        right: panel.right
+                        right: parent.right
                         horizontalCenter: undefined
                     }
                 },
                 PropertyChanges {
-                    target: button
-                    anchors {
-                        topMargin: Theme.paddingLarge
-                        rightMargin: Theme.horizontalPageMargin
-                    }
+                    target: inputContainer
+                    x: Theme.horizontalPageMargin + iconLoader.width + 2 * iconContainer._margins
+                },
+                PropertyChanges {
+                    target: loginLabel
+                    maximumHeight: ((inputContainer._ymax1 < inputContainer._ymax2) ? (_screenHeight/2 - inputField._backgroundRuleTopOffset) :
+                        (thisView.height - inputField.height)) - inputContainer._ymin
                 }
             ]
         }
