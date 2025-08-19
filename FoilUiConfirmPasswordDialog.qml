@@ -4,7 +4,7 @@ import Sailfish.Silica 1.0
 import "../harbour"
 
 Dialog {
-    id: dialog
+    id: thisPage
 
     forwardNavigation: false
 
@@ -14,14 +14,14 @@ Dialog {
 
     readonly property bool _landscapeLayout: isLandscape && Screen.sizeCategory < Screen.Large
     readonly property real _landscapeWidth: Screen.height - (('topCutout' in Screen) ? Screen.topCutout.height : 0)
+    readonly property int _screenHeight: isPortrait ? Screen.height : Screen.width
     readonly property bool _canCheckPassword: inputField.text.length > 0 && !wrongPassword
-    readonly property int _fullHeight: isPortrait ? Screen.height : Screen.width
 
     signal passwordConfirmed()
 
     function checkPassword() {
         if (inputField.text === password) {
-            dialog.passwordConfirmed()
+            thisPage.passwordConfirmed()
         } else {
             wrongPassword = true
             wrongPasswordAnimation.start()
@@ -39,73 +39,110 @@ Dialog {
     // when on-screen keyboard is active and taking part of the screen.
     onIsLandscapeChanged: width = isLandscape ? _landscapeWidth : Screen.width
 
-    InfoLabel {
-        text: foilUi.qsTrConfirmPasswordPrompt()
+    Item {
+        id: iconContainer
 
-        // Bind to panel x position for shake animation
-        x: Theme.horizontalPageMargin + panel.x
-        width: parent.width - 2 * Theme.horizontalPageMargin
+        readonly property int _margins: Theme.horizontalPageMargin
+
         anchors {
-            bottom: panel.top
-            bottomMargin: Theme.paddingLarge
+            left: parent.left
+            leftMargin: _landscapeLayout ? _margins : 0
         }
 
-        // Hide it when it's only partially visible
-        opacity: (y < Theme.paddingSmall) ? 0 : 1
-        Behavior on opacity {
-            enabled: !orientationTransitionRunning
-            FadeAnimation { }
+        HarbourHighlightIcon {
+            id: icon
+
+
+            readonly property int _size: Theme.itemSizeExtraLarge
+
+            source: "images/password-confirm.svg"
+            anchors.centerIn: parent
+            sourceSize.width: _size
+            width: _size
+            opacity: ((iconContainer.x + x) > Theme.paddingLarge && (iconContainer.y + y) > Theme.paddingLarge) ? 1 : 0
+            visible: opacity > 0
+
+            Behavior on opacity { FadeAnimation { } }
         }
+
     }
 
     Item {
-        id: panel
+        id: inputContainer
 
-        width: parent.width
-        height: childrenRect.height + (_landscapeLayout ? 0 : Theme.paddingLarge)
-        y: Math.min((_fullHeight - height)/2, parent.height - panel.height)
+        readonly property int _ymin: Theme.paddingLarge
+        readonly property int _ymax1: _screenHeight/2 - inputField._backgroundRuleTopOffset - inputField.y
+        readonly property int _ymax2: thisPage.height - inputField.height - inputField.y
 
-        Label {
-            id: warning
+        x: Theme.horizontalPageMargin + (_landscapeLayout ? (icon.width + 2 * iconContainer._margins) : 0)
+        y: Math.min(_ymax1, _ymax2)
+        width: parent.width - x - Theme.horizontalPageMargin
+        height: inputPanel.height
 
-            x: Theme.horizontalPageMargin
-            width: parent.width - 2 * x
-            text: foilUi.qsTrConfirmPasswordDescription()
-            font.pixelSize: Theme.fontSizeExtraSmall
-            color: Theme.secondaryColor
-            wrapMode: Text.Wrap
-        }
+        Column {
+            id: inputPanel
 
-        HarbourPasswordInputField {
-            id: inputField
+            width: parent.width
 
-            anchors {
-                left: panel.left
-                top: warning.bottom
-                topMargin: Theme.paddingLarge
+            Column {
+                width: parent.width
+                spacing: Theme.paddingLarge
+
+                InfoLabel {
+                    readonly property int _y: inputContainer.y + y
+
+                    text: foilUi.qsTrConfirmPasswordPrompt()
+                    horizontalAlignment: Text.AlignLeft
+                    // Hide it when it's only partially visible
+                    opacity: (_y <= 0) ? 0 : 1
+                    Behavior on opacity {
+                        enabled: !orientationTransitionRunning
+                        FadeAnimation { }
+                    }
+                }
+
+                Label {
+                    id: warning
+
+                    x: Theme.horizontalPageMargin
+                    width: parent.width - 2 * x
+                    horizontalAlignment: Text.AlignLeft
+                    text: foilUi.qsTrConfirmPasswordDescription()
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                    color: Theme.secondaryColor
+                    wrapMode: Text.Wrap
+                }
+
+                HarbourPasswordInputField {
+                    id: inputField
+
+                    readonly property int _backgroundRuleTopOffset: contentItem.y + contentItem.height
+
+                    width: parent.width
+                    placeholderText: foilUi.qsTrConfirmPasswordRepeatPlaceholder()
+                    label: foilUi.qsTrConfirmPasswordRepeatLabel()
+                    onTextChanged: wrongPassword = false
+                    EnterKey.enabled: _canCheckPassword
+                    EnterKey.onClicked: checkPassword()
+                }
             }
 
-            placeholderText: foilUi.qsTrConfirmPasswordRepeatPlaceholder()
-            label: foilUi.qsTrConfirmPasswordRepeatLabel()
-            onTextChanged: dialog.wrongPassword = false
-            EnterKey.enabled: dialog._canCheckPassword
-            EnterKey.onClicked: dialog.checkPassword()
-        }
+            Button {
+                id: confirmButton
 
-        Button {
-            id: button
-
-            anchors.bottomMargin: Theme.paddingLarge
-            text: foilUi.qsTrConfirmPasswordButton()
-            enabled: dialog._canCheckPassword
-            onClicked: dialog.checkPassword()
+                anchors.rightMargin: Theme.horizontalPageMargin
+                text: foilUi.qsTrConfirmPasswordButton()
+                opacity: (inputContainer.y + inputContainer.height + Theme.paddingLarge < thisPage.height) ? 1 : 0
+                enabled: _canCheckPassword && opacity > 0
+                onClicked: checkPassword()
+            }
         }
     }
 
     HarbourShakeAnimation  {
         id: wrongPasswordAnimation
 
-        target: panel
+        target: inputPanel
     }
 
     states: [
@@ -114,25 +151,19 @@ Dialog {
             when: !_landscapeLayout
             changes: [
                 AnchorChanges {
-                    target: inputField
-                    anchors.right: panel.right
-                },
-                PropertyChanges {
-                    target: inputField
-                    anchors.rightMargin: 0
-                },
-                AnchorChanges {
-                    target: button
+                    target: iconContainer
                     anchors {
-                        top: inputField.bottom
-                        right: undefined
-                        horizontalCenter: parent.horizontalCenter
-                        bottom: undefined
+                        top: parent.top
+                        right: parent.right
+                        bottom: inputContainer.top
                     }
                 },
-                PropertyChanges {
-                    target: button
-                    anchors.rightMargin: 0
+                AnchorChanges {
+                    target: confirmButton
+                    anchors {
+                        right: undefined
+                        horizontalCenter: parent.horizontalCenter
+                    }
                 }
             ]
         },
@@ -141,25 +172,19 @@ Dialog {
             when: _landscapeLayout
             changes: [
                 AnchorChanges {
-                    target: inputField
-                    anchors.right: button.left
-                },
-                PropertyChanges {
-                    target: inputField
-                    anchors.rightMargin: Theme.horizontalPageMargin
-                },
-                AnchorChanges {
-                    target: button
+                    target: iconContainer
                     anchors {
-                        top: undefined
-                        right: panel.right
-                        horizontalCenter: undefined
-                        bottom: inputField.bottom
+                        top: inputContainer.top
+                        right: inputContainer.left
+                        bottom: inputContainer.bottom
                     }
                 },
-                PropertyChanges {
-                    target: button
-                    anchors.rightMargin: Theme.horizontalPageMargin
+                AnchorChanges {
+                    target: confirmButton
+                    anchors {
+                        right: parent.right
+                        horizontalCenter: undefined
+                    }
                 }
             ]
         }

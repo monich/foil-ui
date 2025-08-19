@@ -14,8 +14,8 @@ Item {
     property bool _completed
     property bool _wrongPassword
     readonly property var _settings: foilUi.settings
-    readonly property int _screenHeight: page.isLandscape ? Screen.width : Screen.height
     readonly property bool _landscapeLayout: page.isLandscape && Screen.sizeCategory < Screen.Large
+    readonly property int _screenHeight: page.isLandscape ? Screen.width : Screen.height
     readonly property bool _unlocking: !foilUi.isLockedState(foilModel.foilState)
     readonly property bool _canEnterPassword: inputField.text.length > 0 && !_unlocking &&
                                     !wrongPasswordAnimation.running && !_wrongPassword
@@ -79,9 +79,13 @@ Item {
         id: iconContainer
 
         readonly property int _margins: Theme.horizontalPageMargin
+        readonly property int _y1: Math.round((inputContainer.y - height)/2) // portrait
+        readonly property int _y2: Math.round((thisView.height - height)/2) // landscape
+        readonly property int _y3: Math.round(inputField._yAbs + inputField.height - height) // landscape
 
+        y: _landscapeLayout ? Math.min(_y2, _y3) : _y1
+        height: iconLoader.height
         anchors {
-            top: parent.top
             left: parent.left
             leftMargin: _landscapeLayout ? _margins : 0
         }
@@ -103,6 +107,7 @@ Item {
         readonly property int _ymax1: _screenHeight/2 - inputField._backgroundRuleTopOffset - inputField.y
         readonly property int _ymax2: thisView.height - inputField.height - inputField.y
 
+        x: Theme.horizontalPageMargin + (_landscapeLayout ? (iconLoader.width + 2 * iconContainer._margins) : 0)
         y: Math.min(_ymax1, _ymax2)
         width: parent.width - x - Theme.horizontalPageMargin
 
@@ -121,7 +126,7 @@ Item {
             id: inputField
 
             readonly property int _backgroundRuleTopOffset: contentItem.y + contentItem.height
-            readonly property int _backgroundRuleY: parent.parent.y + parent.y + y + _backgroundRuleTopOffset
+            readonly property real _yAbs: inputContainer.y + y
 
             enabled: !_unlocking
             onTextChanged: _wrongPassword = false
@@ -149,6 +154,8 @@ Item {
     }
 
     Loader {
+        readonly property bool _display: _settings.sharedKeyWarning && foilUi.otherFoilAppsInstalled
+
         anchors {
             top: parent.top
             topMargin: _screenHeight - height - Theme.paddingLarge
@@ -157,8 +164,7 @@ Item {
             right: parent.right
             rightMargin: Theme.horizontalPageMargin
         }
-        readonly property bool display: _settings.sharedKeyWarning && foilUi.otherFoilAppsInstalled
-        opacity: display ? 1 : 0
+        opacity: _display ? 1 : 0
         active: opacity > 0
         sourceComponent: Component {
             FoilUiAppsWarning {
@@ -176,10 +182,7 @@ Item {
             changes: [
                 AnchorChanges {
                     target: iconContainer
-                    anchors {
-                        right: parent.right
-                        bottom: inputContainer.top
-                    }
+                    anchors.right: parent.right
                 },
                 AnchorChanges {
                     target: unlockButton
@@ -187,10 +190,6 @@ Item {
                         right: undefined
                         horizontalCenter: parent.horizontalCenter
                     }
-                },
-                PropertyChanges {
-                    target: inputContainer
-                    x: Theme.horizontalPageMargin
                 },
                 PropertyChanges {
                     target: loginLabel
@@ -204,10 +203,7 @@ Item {
             changes: [
                 AnchorChanges {
                     target: iconContainer
-                    anchors {
-                        right: inputContainer.left
-                        bottom: parent.bottom
-                    }
+                    anchors.right: inputContainer.left
                 },
                 AnchorChanges {
                     target: unlockButton
@@ -215,10 +211,6 @@ Item {
                         right: parent.right
                         horizontalCenter: undefined
                     }
-                },
-                PropertyChanges {
-                    target: inputContainer
-                    x: Theme.horizontalPageMargin + iconLoader.width + 2 * iconContainer._margins
                 },
                 PropertyChanges {
                     target: loginLabel
