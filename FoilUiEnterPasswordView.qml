@@ -79,7 +79,7 @@ Item {
         id: iconContainer
 
         readonly property int _margins: Theme.horizontalPageMargin
-        readonly property int _y1: Math.round((inputContainer.y - height)/2) // portrait
+        readonly property int _y1: Math.round((loginLabel.y - height)/2) // portrait
         readonly property int _y2: Math.round((thisView.height - height)/2) // landscape
         readonly property int _y3: Math.round(inputField._yAbs + inputField.height - height) // landscape
 
@@ -93,11 +93,27 @@ Item {
         Loader {
             id: iconLoader
 
-            opacity: ((iconContainer.x + x) > Theme.paddingLarge && (iconContainer.y + y) > Theme.paddingLarge) ? 1 : 0
+            opacity: ((iconContainer.x + x) >= Theme.paddingSmall && (iconContainer.y + y) > Theme.paddingSmall) ? 1 : 0
             visible: opacity > 0
             sourceComponent: iconComponent
             anchors.centerIn: iconContainer
         }
+    }
+
+    FoilUiInfoLabel {
+        id: loginLabel
+
+        x: inputContainer.x
+        width: inputContainer.width
+        anchors {
+            bottom: inputContainer.top
+            bottomMargin: _landscapeLayout ? 0 : Theme.paddingLarge
+        }
+        shortText: foilUi.qsTrEnterPasswordViewEnterPasswordShort()
+        longText: foilUi.qsTrEnterPasswordViewEnterPasswordLong()
+        opacity: inputContainer.y >= inputContainer._ymin ? 1 : 0
+        horizontalAlignment: Text.AlignLeft
+        verticalAlignment: Text.AlignVCenter
     }
 
     Column {
@@ -110,17 +126,6 @@ Item {
         x: Theme.horizontalPageMargin + (_landscapeLayout ? (iconLoader.width + 2 * iconContainer._margins) : 0)
         y: Math.min(_ymax1, _ymax2)
         width: parent.width - x - Theme.horizontalPageMargin
-
-        FoilUiInfoLabel {
-            id: loginLabel
-
-            shortText: foilUi.qsTrEnterPasswordViewEnterPasswordShort()
-            longText: foilUi.qsTrEnterPasswordViewEnterPasswordLong()
-            opacity: inputContainer.y >= inputContainer._ymin ? 1 : 0
-            height: maximumHeight
-            horizontalAlignment: Text.AlignLeft
-            verticalAlignment: Text.AlignVCenter
-        }
 
         HarbourPasswordInputField {
             id: inputField
@@ -185,6 +190,10 @@ Item {
                     anchors.right: parent.right
                 },
                 AnchorChanges {
+                    target: loginLabel
+                    anchors.top: undefined
+                },
+                AnchorChanges {
                     target: unlockButton
                     anchors {
                         right: undefined
@@ -204,6 +213,10 @@ Item {
                 AnchorChanges {
                     target: iconContainer
                     anchors.right: inputContainer.left
+                },
+                AnchorChanges {
+                    target: loginLabel
+                    anchors.top: parent.top
                 },
                 AnchorChanges {
                     target: unlockButton
