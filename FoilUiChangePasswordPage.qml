@@ -144,7 +144,7 @@ Page {
             HarbourPasswordInputField {
                 id: newPasswordField
 
-                readonly property int _backgroundRuleTopOffset: contentItem.y + contentItem.height
+                readonly property int _backgroundRuleTopOffset: editContentItem ? (editContentItem.y + editContentItem.height) : 0
 
                 width: parent.width
                 EnterKey.enabled: _canChangePassword

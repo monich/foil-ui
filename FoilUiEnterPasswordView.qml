@@ -130,7 +130,7 @@ Item {
         HarbourPasswordInputField {
             id: inputField
 
-            readonly property int _backgroundRuleTopOffset: contentItem.y + contentItem.height
+            readonly property int _backgroundRuleTopOffset: editContentItem ? (editContentItem.y + editContentItem.height) : 0
             readonly property real _yAbs: inputContainer.y + y
 
             enabled: !_unlocking
